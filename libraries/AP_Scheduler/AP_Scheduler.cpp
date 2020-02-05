@@ -19,6 +19,7 @@
  *
  */
 #include "AP_Scheduler.h"
+#include "auditd_util_timespec.h"
 
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Param/AP_Param.h>
@@ -100,6 +101,16 @@ void AP_Scheduler::init(const AP_Scheduler::Task *tasks, uint8_t num_tasks, uint
     memset(_last_run, 0, sizeof(_last_run[0]) * _num_tasks);
     _tick_counter = 0;
 
+
+    //We can setup the timing collection stuff over here
+    char** task_names = (char**) malloc(sizeof(char*) * (_num_tasks) + 1);
+    task_names[0] = strdup("fast_loop");
+    for(uint8_t i = 1;i <= _num_tasks;i++){
+        task_names[i] = strdup(tasks[i].name);
+    }
+
+    setup_timing_capture(task_names,_num_tasks + 1,100);
+
     // setup initial performance counters
     perf_info.set_loop_rate(get_loop_rate_hz());
     perf_info.reset();
@@ -180,6 +191,8 @@ void AP_Scheduler::run(uint32_t time_available)
         now = AP_HAL::micros();
         uint32_t time_taken = now - _task_time_started;
 
+        add_time_to_buffer(i,time_taken);
+
         if (time_taken > _task_time_allowed) {
             // the event overran!
             debug(3, "Scheduler overrun task[%u-%s] (%u/%u)\n",
@@ -247,7 +260,9 @@ void AP_Scheduler::loop()
     // Execute the fast loop
     // ---------------------
     if (_fastloop_fn) {
+        
         _fastloop_fn();
+        
     }
 
     // tell the scheduler one tick has passed
