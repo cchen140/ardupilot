@@ -222,11 +222,7 @@ void Copter::loop()
 // Main loop - 400hz
 void Copter::fast_loop()
 {   
-    // auditd benchmarking
-    // base overhead measurement
-    struct timespec benchmark_begin_time, benchmark_end_time, benchmark_diff_time;
-    timespec_get_time(&benchmark_begin_time);
-    
+    uint32_t _loop_timer_fast_start_us = AP_HAL::micros();
     // update INS immediately to get current gyro data populated
     ins.update();
 
@@ -269,19 +265,8 @@ void Copter::fast_loop()
     if (should_log(MASK_LOG_ANY)) {
         Log_Sensor_Health();
     }
-
-    timespec_get_time(&benchmark_end_time);
-    timespec_diff(&benchmark_begin_time, &benchmark_end_time, &benchmark_diff_time);
-    
-    //Calculating empty loop time
-    struct timespec empty_begin_time, empty_end_time, empty_diff_time, benchmark_result_time;
-    timespec_get_time(&empty_begin_time);
-    timespec_get_time(&empty_end_time);
-    timespec_diff(&empty_begin_time, &empty_end_time, &empty_diff_time);
-
-    //Obtain effective loop time in benchmark_result_time
-    timespec_diff(&empty_diff_time,&benchmark_diff_time,&benchmark_result_time);
-    add_time_to_buffer(0,timespec_get_micro_u64(&benchmark_result_time));
+    uint32_t _loop_timer_fast_finish_us = AP_HAL::micros();
+    add_time_to_buffer(0,_loop_timer_fast_finish_us - _loop_timer_fast_start_us);
 }
 
 // rc_loops - reads user input from transmitter/receiver
