@@ -76,8 +76,6 @@
 #include "Copter.h"
 #include "auditd_util_timespec.h" // for benchmarking auditd overhead -> add method to capture and save timing results in array
 #include <iostream>
-#include <unistd.h>
-
 
 #define SCHED_TASK(func, rate_hz, max_time_micros) SCHED_TASK_CLASS(Copter, &copter, func, rate_hz, max_time_micros)
 
@@ -228,7 +226,7 @@ void Copter::fast_loop()
     // base overhead measurement
     struct timespec benchmark_begin_time, benchmark_end_time, benchmark_diff_time;
     timespec_get_time(&benchmark_begin_time);
-    
+
     // update INS immediately to get current gyro data populated
     ins.update();
 
