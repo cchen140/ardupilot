@@ -26,7 +26,7 @@
 #include <AP_Vehicle/AP_Vehicle.h>
 #include <DataFlash/DataFlash.h>
 #include <AP_InertialSensor/AP_InertialSensor.h>
-
+#include <stdlib.h>
 #include <stdio.h>
 
 #if APM_BUILD_TYPE(APM_BUILD_ArduCopter) || APM_BUILD_TYPE(APM_BUILD_ArduSub)
@@ -109,7 +109,16 @@ void AP_Scheduler::init(const AP_Scheduler::Task *tasks, uint8_t num_tasks, uint
         task_names[i] = strdup(tasks[i].name);
     }
 
-    setup_timing_capture(task_names,_num_tasks + 1,100);
+    int iters = 1000;
+
+    const char *iter_string = getenv("ARDU_ITER");
+    if(!iter_string){
+	    fprintf(stderr,"ARDU_ITER undefined, running for default iterations : %d\n", iters);
+    } else{
+	    iters = atoi(iter_string);
+    }
+
+    setup_timing_capture(task_names,_num_tasks + 1,iters);
 
     // setup initial performance counters
     perf_info.set_loop_rate(get_loop_rate_hz());

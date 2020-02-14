@@ -39,17 +39,29 @@ __uint32_t timespec_get_micro_u64(struct timespec *in) {
 }
 
 void dump_timing_results(int s){
-    std::cout << "Caught signal " << s << std::endl;
-    
+    //Should open a file here - so that we have a way to know when the dump operations begin
+    FILE *fp;
+    fp = fopen ("timing.log", "w+");
+    int print_output = 0;
+    const char *op_toggle = getenv("ARDU_TIME");
+    if(!op_toggle){
+	fprintf(stderr,"ARDU_TIME not set\n");
+    } else{
+	    print_output = atoi(op_toggle);
+    }
+        
     for(int i = 0; i < NUM_TASKS;i++){
         char* task_name = timing_results[i].name;
-        for(int j =0;j < timing_results[i].current_buffer; j++){
-            std::cout << task_name << " " << timing_results[i].timings[j] << " us" << std::endl;
-        }
-        
+	if(print_output == 1){
+        	for(int j =0;j < timing_results[i].current_buffer; j++){
+            		std::cout << task_name << " " << timing_results[i].timings[j] << " us" << std::endl;
+        	}
+	}
+        free(timing_results[i].timings);        
     }
     
     free(timing_results);
+    fclose(fp);
     exit(1);
 }
 
@@ -78,10 +90,11 @@ void setup_timing_capture(char **task_names, int num_tasks, int buffer_capacity)
 }
 
 bool check_all_tasks_collected(){
-    bool check = true;
+    bool check = false;
     for(int i = 0;i < NUM_TASKS;i++){
-        if (timing_results[i].current_buffer < timing_results[i].buffer_capacity){
-            check = false;
+        if (timing_results[i].current_buffer >= timing_results[i].buffer_capacity){
+            check = true;
+	    break;
         }
     }
 

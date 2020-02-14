@@ -76,6 +76,8 @@
 #include "Copter.h"
 #include "../libraries/AP_Scheduler/auditd_util_timespec.h"
 #include <iostream>
+#include <unistd.h>
+
 
 #define SCHED_TASK(func, rate_hz, max_time_micros) SCHED_TASK_CLASS(Copter, &copter, func, rate_hz, max_time_micros)
 
@@ -221,7 +223,8 @@ void Copter::loop()
 
 // Main loop - 400hz
 void Copter::fast_loop()
-{   
+{  
+       //sleep(1);	
     uint32_t _loop_timer_fast_start_us = AP_HAL::micros();
     // update INS immediately to get current gyro data populated
     ins.update();
