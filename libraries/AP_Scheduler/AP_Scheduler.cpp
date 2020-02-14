@@ -38,13 +38,14 @@
 #define debug(level, fmt, args...)   do { if ((level) <= _debug.get()) { hal.console->printf(fmt, ##args); }} while (0)
 
 inline int get_loop_rate(){ 
-    if (getenvgetenv("ARDU_FAST_RATE")) {const char *fast_rate_string = getenv("ARDU_FAST_RATE"); 
+    const char *fast_rate_string = getenv("ARDU_FAST_RATE"); 
     if(!fast_rate_string){ 
         return SCHEDULER_DEFAULT_LOOP_RATE;
     } else{
 	    return atoi(fast_rate_string);
     }
 }
+
 extern const AP_HAL::HAL& hal;
 
 int8_t AP_Scheduler::current_task = -1;
