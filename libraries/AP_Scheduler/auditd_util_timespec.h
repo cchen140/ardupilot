@@ -9,12 +9,21 @@
 
 typedef unsigned long long u64;
 
+typedef struct {
+    char *name;
+    u64* timings; 
+    int buffer_capacity;
+    int current_buffer;
+} Task_Timing;
 
 void timespec_diff(struct timespec *start, struct timespec *stop,
                    struct timespec *result);
 void timespec_deep_copy(struct timespec *src, struct timespec *dest);
 void timespec_get_time(struct timespec *instance);
-u64 timespec_get_micro_u64(struct timespec *in);
+__uint32_t timespec_get_micro_u64(struct timespec *in);
+
+void setup_timing_capture(char **task_names, int num_tasks ,int buffer_capacity);
+void add_time_to_buffer(int task_id, __uint32_t loop_time);
 
 void setup_timing_capture(int buffer_capacity);
 void add_time_to_buffer(struct timespec *result);

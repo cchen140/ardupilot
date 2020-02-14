@@ -19,13 +19,14 @@
  *
  */
 #include "AP_Scheduler.h"
+#include "auditd_util_timespec.h"
 
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Param/AP_Param.h>
 #include <AP_Vehicle/AP_Vehicle.h>
 #include <DataFlash/DataFlash.h>
 #include <AP_InertialSensor/AP_InertialSensor.h>
-
+#include <stdlib.h>
 #include <stdio.h>
 
 #if APM_BUILD_TYPE(APM_BUILD_ArduCopter) || APM_BUILD_TYPE(APM_BUILD_ArduSub)
@@ -99,6 +100,25 @@ void AP_Scheduler::init(const AP_Scheduler::Task *tasks, uint8_t num_tasks, uint
     _last_run = new uint16_t[_num_tasks];
     memset(_last_run, 0, sizeof(_last_run[0]) * _num_tasks);
     _tick_counter = 0;
+
+
+    //We can setup the timing collection stuff over here
+    char** task_names = (char**) malloc(sizeof(char*) * (_num_tasks) + 1);
+    task_names[0] = strdup("fast_loop");
+    for(uint8_t i = 1;i <= _num_tasks;i++){
+        task_names[i] = strdup(tasks[i].name);
+    }
+
+    int iters = 1000;
+
+    const char *iter_string = getenv("ARDU_ITER");
+    if(!iter_string){
+	    fprintf(stderr,"ARDU_ITER undefined, running for default iterations : %d\n", iters);
+    } else{
+	    iters = atoi(iter_string);
+    }
+
+    setup_timing_capture(task_names,_num_tasks + 1,iters);
 
     // setup initial performance counters
     perf_info.set_loop_rate(get_loop_rate_hz());
@@ -180,6 +200,8 @@ void AP_Scheduler::run(uint32_t time_available)
         now = AP_HAL::micros();
         uint32_t time_taken = now - _task_time_started;
 
+        add_time_to_buffer(i,time_taken);
+
         if (time_taken > _task_time_allowed) {
             // the event overran!
             debug(3, "Scheduler overrun task[%u-%s] (%u/%u)\n",
@@ -247,7 +269,9 @@ void AP_Scheduler::loop()
     // Execute the fast loop
     // ---------------------
     if (_fastloop_fn) {
+        
         _fastloop_fn();
+        
     }
 
     // tell the scheduler one tick has passed

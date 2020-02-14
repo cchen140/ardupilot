@@ -74,8 +74,14 @@
  */
 
 #include "Copter.h"
+<<<<<<< HEAD
 #include "auditd_util_timespec.h" // for benchmarking auditd overhead -> add method to capture and save timing results in array
+=======
+#include "../libraries/AP_Scheduler/auditd_util_timespec.h"
+>>>>>>> 41cf8d536c0ec67bb64597fcf4bac2280cf19fde
 #include <iostream>
+#include <unistd.h>
+
 
 #define SCHED_TASK(func, rate_hz, max_time_micros) SCHED_TASK_CLASS(Copter, &copter, func, rate_hz, max_time_micros)
 
@@ -206,7 +212,11 @@ void Copter::setup()
 
     init_ardupilot();
 
+<<<<<<< HEAD
     setup_timing_capture(100*1000);
+=======
+    //setup_timing_capture(1000);
+>>>>>>> 41cf8d536c0ec67bb64597fcf4bac2280cf19fde
 
     // initialise the main loop scheduler
     scheduler.init(&scheduler_tasks[0], ARRAY_SIZE(scheduler_tasks), MASK_LOG_PM);
@@ -221,12 +231,18 @@ void Copter::loop()
 
 // Main loop - 400hz
 void Copter::fast_loop()
+<<<<<<< HEAD
 {
     // auditd benchmarking
     // base overhead measurement
     struct timespec benchmark_begin_time, benchmark_end_time, benchmark_diff_time;
     timespec_get_time(&benchmark_begin_time);
     
+=======
+{  
+       //sleep(1);	
+    uint32_t _loop_timer_fast_start_us = AP_HAL::micros();
+>>>>>>> 41cf8d536c0ec67bb64597fcf4bac2280cf19fde
     // update INS immediately to get current gyro data populated
     ins.update();
 
@@ -269,10 +285,15 @@ void Copter::fast_loop()
     if (should_log(MASK_LOG_ANY)) {
         Log_Sensor_Health();
     }
+<<<<<<< HEAD
 
     timespec_get_time(&benchmark_end_time);
     timespec_diff(&benchmark_begin_time, &benchmark_end_time, &benchmark_diff_time);
     add_time_to_buffer(benchmark_diff_time);
+=======
+    uint32_t _loop_timer_fast_finish_us = AP_HAL::micros();
+    add_time_to_buffer(0,_loop_timer_fast_finish_us - _loop_timer_fast_start_us);
+>>>>>>> 41cf8d536c0ec67bb64597fcf4bac2280cf19fde
 }
 
 // rc_loops - reads user input from transmitter/receiver
