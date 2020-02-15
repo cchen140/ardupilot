@@ -37,26 +37,17 @@
 
 #define debug(level, fmt, args...)   do { if ((level) <= _debug.get()) { hal.console->printf(fmt, ##args); }} while (0)
 
-inline int get_loop_rate(){ 
-    const char *fast_rate_string = getenv("ARDU_FAST_RATE"); 
-    if(!fast_rate_string){ 
-        return SCHEDULER_DEFAULT_LOOP_RATE;
-    } else{
-	    return atoi(fast_rate_string);
-    }
-}
-
 extern const AP_HAL::HAL& hal;
 
 int8_t AP_Scheduler::current_task = -1;
 
-AP_Param::GroupInfo AP_Scheduler::var_info[];  = {
+const AP_Param::GroupInfo AP_Scheduler::var_info[] = {
     // @Param: DEBUG
     // @DisplayName: Scheduler debug level
     // @Description: Set to non-zero to enable scheduler debug messages. When set to show "Slips" the scheduler will display a message whenever a scheduled task is delayed due to too much CPU load. When set to ShowOverruns the scheduled will display a message whenever a task takes longer than the limit promised in the task table.
     // @Values: 0:Disabled,2:ShowSlips,3:ShowOverruns
     // @User: Advanced
-    AP_GROUPINFO("DEBUG",    0, AP_Scheduler, _debug, 0),
+    AP_GROUPINFO("DEBUG",    0, AP_Scheduler, _debug, 3),
 
     // @Param: LOOP_RATE
     // @DisplayName: Scheduling main loop rate
@@ -64,7 +55,7 @@ AP_Param::GroupInfo AP_Scheduler::var_info[];  = {
     // @Values: 50:50Hz,100:100Hz,200:200Hz,250:250Hz,300:300Hz,400:400Hz
     // @RebootRequired: True
     // @User: Advanced
-    AP_GROUPINFO("LOOP_RATE",  1, AP_Scheduler, _loop_rate_hz, get_loop_rate),
+    AP_GROUPINFO("LOOP_RATE",  1, AP_Scheduler, _loop_rate_hz, 400),
 
     AP_GROUPEND
 }; 
