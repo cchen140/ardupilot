@@ -33,7 +33,7 @@
 #define SCHEDULER_DEFAULT_LOOP_RATE 400
 #else
 #define SCHEDULER_DEFAULT_LOOP_RATE  50
-#endif
+#endif 
 
 #define debug(level, fmt, args...)   do { if ((level) <= _debug.get()) { hal.console->printf(fmt, ##args); }} while (0)
 
@@ -55,7 +55,7 @@ const AP_Param::GroupInfo AP_Scheduler::var_info[] = {
     // @Values: 50:50Hz,100:100Hz,200:200Hz,250:250Hz,300:300Hz,400:400Hz
     // @RebootRequired: True
     // @User: Advanced
-    AP_GROUPINFO("LOOP_RATE",  1, AP_Scheduler, _loop_rate_hz, 400),
+    AP_GROUPINFO("LOOP_RATE",  1, AP_Scheduler, _loop_rate_hz, SCHEDULER_DEFAULT_LOOP_RATE),
 
     AP_GROUPEND
 }; 
@@ -118,7 +118,7 @@ void AP_Scheduler::init(const AP_Scheduler::Task *tasks, uint8_t num_tasks, uint
 	    iters = atoi(iter_string);
     }
 
-    setup_timing_capture(task_names,_num_tasks + 1,iters);
+    setup_timing_capture(task_names,_num_tasks + 1,iters,SCHEDULER_DEFAULT_LOOP_RATE);
 
     // setup initial performance counters
     perf_info.set_loop_rate(get_loop_rate_hz());

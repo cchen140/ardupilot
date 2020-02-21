@@ -6,6 +6,8 @@
 
 Task_Timing* timing_results;
 int NUM_TASKS;
+int FREQUENCY;
+uint32_t MAIN_LOOP_MICROS;
 
 // Source code is from https://gist.github.com/diabloneo/9619917
 void timespec_diff(struct timespec *start, struct timespec *stop,
@@ -56,7 +58,17 @@ void dump_timing_results(int s){
         	for(int j =0;j < timing_results[i].current_buffer; j++){
             		std::cout << task_name << " " << timing_results[i].timings[j] << " us" << std::endl;
         	}
-	}
+	} else if(print_output == 2){
+        if(i == 0){
+            int deadlines_missed_count = 0;
+            std::cout << "Missed deadlines" << std::endl;
+            for(int j = 0;j < timing_results[i].current_buffer;j++){
+                if(timing_results[i].timings[j] > MAIN_LOOP_MICROS){
+                    std::cout << task_name << " " << timing_results[i].timings[j] << " us" << std::endl;
+                }
+            }
+        }
+    }
         free(timing_results[i].timings);        
     }
     
@@ -75,9 +87,11 @@ void setup_sighandler(){
    sigaction(SIGINT, &sigIntHandler, NULL);
 }
 
-void setup_timing_capture(char **task_names, int num_tasks, int buffer_capacity){
+void setup_timing_capture(char **task_names, int num_tasks, int buffer_capacity, int main_loop_freq){
     timing_results = (Task_Timing*) malloc(sizeof(Task_Timing) * num_tasks);
     NUM_TASKS = num_tasks;
+    FREQUENCY = main_loop_freq;
+    MAIN_LOOP_MICROS = 1000000 / FREQUENCY;
 
     for(int i = 0; i < num_tasks;i++){
         timing_results[i].buffer_capacity = buffer_capacity;
