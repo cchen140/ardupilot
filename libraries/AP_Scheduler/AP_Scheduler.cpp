@@ -20,6 +20,13 @@
  */
 #include "AP_Scheduler.h"
 
+#include <iostream>
+#include <unistd.h>
+#include <linux/unistd.h>
+#include <linux/kernel.h>
+#include <linux/types.h>
+#include <sys/syscall.h>
+
 #include <AP_HAL/AP_HAL.h>
 #include <AP_Param/AP_Param.h>
 #include <AP_Vehicle/AP_Vehicle.h>
@@ -27,6 +34,62 @@
 #include <AP_InertialSensor/AP_InertialSensor.h>
 
 #include <stdio.h>
+
+
+/* SCHED_DEADLINE */
+#define gettid() syscall(__NR_gettid)
+
+#define SCHED_DEADLINE	6
+
+/* XXX use the proper syscall numbers */
+#ifdef __x86_64__
+#define __NR_sched_setattr		314
+#define __NR_sched_getattr		315
+#endif
+
+#ifdef __i386__
+#define __NR_sched_setattr		351
+#define __NR_sched_getattr		352
+#endif
+
+#ifdef __arm__
+#define __NR_sched_setattr		380
+#define __NR_sched_getattr		381
+#endif
+
+struct sched_attr {
+    __u32 size;
+    __u32 sched_policy;
+    __u64 sched_flags;
+    
+    /* SCHED_NORMAL, SCHED_BATCH */
+    __s32 sched_nice;
+    
+    /* SCHED_FIFO, SCHED_RR */
+    __u32 sched_priority;
+
+    /* SCHED_DEADLINE (nsec) */
+    __u64 sched_runtime;
+    __u64 sched_deadline;
+    __u64 sched_period;
+};
+
+int sched_setattr(pid_t pid,
+        const struct sched_attr *attr,
+        unsigned int flags)
+{
+    return syscall(__NR_sched_setattr, pid, attr, flags);
+}
+
+int sched_getattr(pid_t pid,
+        struct sched_attr *attr,
+        unsigned int size,
+        unsigned int flags)
+{
+    return syscall(__NR_sched_getattr, pid, attr, size, flags);
+}
+/* End of SCHED_DEADLINE */
+
 
 #if APM_BUILD_TYPE(APM_BUILD_ArduCopter) || APM_BUILD_TYPE(APM_BUILD_ArduSub)
 #define SCHEDULER_DEFAULT_LOOP_RATE 400
@@ -230,8 +293,40 @@ float AP_Scheduler::load_average()
     return used_time / (float)loop_us;
 }
 
+char firstLoop = 1;
+int loopCount = 0;
 void AP_Scheduler::loop()
 {
+    if (firstLoop == 1) {
+        struct sched_attr attr;
+        int ret;
+        unsigned int flags = 0;
+
+        firstLoop = 0;
+        attr.size = sizeof(attr);
+        attr.sched_flags = 0;
+        attr.sched_nice = 0;
+        attr.sched_priority = 0;
+
+        attr.sched_policy = SCHED_DEADLINE;
+        attr.sched_runtime = 2000000; //1.5ms 
+        attr.sched_period = attr.sched_deadline = 10000000; //2.5ms == 400Hz
+
+        ret = sched_setattr(0, &attr, flags);
+        if (ret < 0) {
+            perror("sched_setattr");
+            exit(-1);
+        }
+
+        std::cout << "switched to SCHED_DEADLINE." << std::endl;
+    } else {
+        sched_yield();
+        loopCount++;
+        if (loopCount%100 == 0)
+            std::cout << AP_HAL::micros()%10000 << std::endl;
+    }
+
+
     // wait for an INS sample
     AP::ins().wait_for_sample();
 

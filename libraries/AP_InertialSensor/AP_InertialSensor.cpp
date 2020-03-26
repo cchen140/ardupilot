@@ -1,5 +1,15 @@
 #include <assert.h>
 
+#include <iostream>
+#include <sched.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <linux/unistd.h>
+#include <linux/kernel.h>
+#include <linux/types.h>
+#include <sys/syscall.h>
+
 #include <AP_Common/AP_Common.h>
 #include <AP_HAL/AP_HAL.h>
 #include <AP_HAL/I2CDevice.h>
@@ -1390,14 +1400,16 @@ void AP_InertialSensor::wait_for_sample(void)
     }
 
     uint32_t now = AP_HAL::micros();
-
+    /*
     if (_next_sample_usec == 0 && _delta_time <= 0) {
         // this is the first call to wait_for_sample()
         _last_sample_usec = now - _sample_period_usec;
         _next_sample_usec = now + _sample_period_usec;
         goto check_sample;
     }
+    */
 
+    /*
     // see how long it is till the next sample is due
     if (_next_sample_usec - now <=_sample_period_usec) {
         // we're ahead on time, schedule next sample at expected period
@@ -1424,6 +1436,7 @@ void AP_InertialSensor::wait_for_sample(void)
         timing_printf("overshoot2 %u\n", (unsigned)(now-_next_sample_usec));
         _next_sample_usec = now + _sample_period_usec;
     }
+    */
 
 check_sample:
     if (!_hil_mode) {
