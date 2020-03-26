@@ -309,8 +309,8 @@ void AP_Scheduler::loop()
         attr.sched_priority = 0;
 
         attr.sched_policy = SCHED_DEADLINE;
-        attr.sched_runtime = 2000000; //1.5ms 
-        attr.sched_period = attr.sched_deadline = 10000000; //2.5ms == 400Hz
+        attr.sched_runtime = 1500000; // 1.5ms 
+        attr.sched_period = attr.sched_deadline = 2500000; // 2.5ms == 400Hz
 
         ret = sched_setattr(0, &attr, flags);
         if (ret < 0) {
@@ -322,8 +322,8 @@ void AP_Scheduler::loop()
     } else {
         sched_yield();
         loopCount++;
-        if (loopCount%100 == 0)
-            std::cout << AP_HAL::micros()%10000 << std::endl;
+        if (loopCount%2000 == 0)
+            std::cout << AP_HAL::micros()%2500 << std::endl;
     }
 
 
