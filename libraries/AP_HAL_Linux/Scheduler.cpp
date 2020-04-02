@@ -1,5 +1,6 @@
 #include "Scheduler.h"
 
+#include <iostream>
 #include <algorithm>
 #include <errno.h>
 #include <poll.h>
@@ -103,6 +104,7 @@ void Scheduler::init()
         t->thread->set_rate(t->rate);
         t->thread->set_stack_size(1024 * 1024);
         t->thread->start(t->name, t->policy, t->prio);
+        std::cout << "start: " << t->name << std::endl;
     }
 
 #if defined(DEBUG_STACK) && DEBUG_STACK

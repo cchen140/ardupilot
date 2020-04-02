@@ -34,7 +34,7 @@
 #include <AP_InertialSensor/AP_InertialSensor.h>
 
 #include <stdio.h>
-
+#include <time.h> // for clock_gettime().
 
 /* SCHED_DEADLINE */
 #define gettid() syscall(__NR_gettid)
@@ -322,8 +322,14 @@ void AP_Scheduler::loop()
     } else {
         sched_yield();
         loopCount++;
-        if (loopCount%2000 == 0)
-            std::cout << AP_HAL::micros()%2500 << std::endl;
+        if (loopCount%2000 == 0) {
+            //std::cout << AP_HAL::micros()%2500 << std::endl;
+            struct timespec currentTime, ct_mono, ct_mono_raw;
+            clock_gettime(CLOCK_BOOTTIME, &currentTime);
+            clock_gettime(CLOCK_MONOTONIC, &ct_mono);
+            clock_gettime(CLOCK_MONOTONIC_RAW, &ct_mono_raw);
+            std::cout << "boottime: " << ((unsigned long long)(currentTime.tv_sec*1000*1000)+(unsigned long long)(currentTime.tv_nsec/1000))%2500 << "\tmonotonic: " << ((unsigned long long)(ct_mono.tv_sec*1000*1000)+(unsigned long long)(ct_mono.tv_nsec/1000))%2500 << "\tmonotonic_raw: " << ((unsigned long long)(ct_mono_raw.tv_sec*1000*1000)+(unsigned long long)(ct_mono_raw.tv_nsec/1000))%2500 << std::endl;
+	}
     }
 
 
